@@ -12,7 +12,8 @@ const skuPrices = {
 };
 
 const discountPrices = {
-  A: { quantity: 3, price: 130 }
+  A: { quantity: 3, price: 130 },
+  B: { quantity: 2, price: 45 }
 };
 
 describe("checkout", () => {
@@ -63,6 +64,27 @@ describe("checkout", () => {
     ${"AAAAAA"} | ${260}
   `(
     "should return $expected when calculating the price of '$input'",
+    ({ input, expected }) => {
+      const pricingStrategy = new QuantityDiscountStrategy(
+        skuPrices,
+        discountPrices
+      );
+      const checkout = new Checkout(pricingStrategy);
+      input.split("").forEach((item: string, index: number) => {
+        checkout.scanItem(item);
+      });
+      expect(checkout.getTotal()).toBe(expected);
+    }
+  );
+
+  it.each`
+    input       | expected
+    ${"AAAB"}   | ${160}
+    ${"AAABB"}  | ${175}
+    ${"AAABBD"} | ${190}
+    ${"DABABA"} | ${190}
+  `(
+    "should return $expected when calculating the price of '$input' based on the discount strategy provided",
     ({ input, expected }) => {
       const pricingStrategy = new QuantityDiscountStrategy(
         skuPrices,
